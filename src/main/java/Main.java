@@ -1,5 +1,9 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
@@ -15,15 +19,7 @@ public class Main {
           serverSocket.setReuseAddress(true);
           clientSocket = serverSocket.accept();
 
-          try (OutputStream outputStream = clientSocket.getOutputStream()) {
-              // Since we're ignoring the actual input, we always respond with PONG
-              while (true) {
-                outputStream.write("+PONG\r\n".getBytes());
-                outputStream.flush();
-              }   
-          } catch (IOException e) {
-              System.out.println("IOException: " + e.getMessage());
-          }
+          multiablePingResponse(clientSocket);
           
         } finally {
           try {
@@ -35,5 +31,28 @@ public class Main {
             System.out.println("IOException: " + e.getMessage());
           }
       }
+    }
+
+    
+    public static void multiablePingResponse(Socket clientSocket){
+      try(BufferedReader reader =new BufferedReader(
+              new InputStreamReader(clientSocket.getInputStream()));
+          BufferedWriter writer = new BufferedWriter(
+              new OutputStreamWriter(clientSocket.getOutputStream()));) {
+
+                String clientData;
+                while ((clientData = reader.readLine()) != null) {
+                  if("ping".equalsIgnoreCase(clientData)){
+                    writer.write("PONG");
+                    writer.flush();
+                    
+                  }
+                  
+                }
+        
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+
     }
   }
